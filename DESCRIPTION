@@ -1,0 +1,25 @@
+Package: determinantalsamplingdesigns
+Title: Tools for Determinantal Sampling Designs
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Vincent",
+           family = "Loonis",
+           role = c("aut", "cre"),
+           email = "vincent.loonis@insee.fr",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: The package contains three functions. Two of them construct a kernel matrix of a sampling design: one real, of fixed size sampling designs with prescribed first order inclusion probabilities (loonismary), the other complex of fixed size, equal probabilities sampling designs (periodicdsd). The last function (lavancier) samples from a sampling design.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Imports: 
+    ggplot2,
+    stats,
+    rlang,
+    numbers
+Suggests: 
+    testthat,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

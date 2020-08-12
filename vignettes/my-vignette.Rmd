@@ -1,0 +1,200 @@
+---
+title: "Package _determinantalsamplingdesigns_ : Tools for Determinantal Sampling Designs"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Package _determinantalsamplingdesigns_ : Tools for Determinantal Sampling Designs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(determinantalsamplingdesigns)
+```
+
+
+Introduction
+=============
+The goal of sampling theory is to acquire knowledge of a parameter of interest using only partial information. This is done by means of a sampling design, through which a random subset is observed, and the construction of an estimator. The properties of the
+sampling design are thus of crucial importance to get “good” estimators. In practice, the following
+issues are fundamental: 
+<ul>
+<li>simplicity of the design (in terms of its definition, theory and/or drawing algorithm),</li>
+<li>knowledge of the first and, possibly, second order inclusion probabilities,</li>
+<li>control of the size of the sample,</li>
+<li>effective construction, in particular with prescribed unequal probabilities, </li>
+<li>statistical amenability (consistency, central limit theorem,...),</li>
+<li>low Mean Square Error (MSE)/Variance of specific estimators based on the design.</li>
+</ul>
+
+Notation
+------------
+We introduce the following notation. We note U the set on which the sampling designs are defined, N the size of the set, n the size of the sampling and K the kernel matrices. For any square matrix K indexed
+by U and s &sube; U, K<SUB>\|s</SUB> denotes the submatrix of K whose rows and columns are indexed by s. 
+
+Determinantal Sampling Designs
+-------------
+Determinantal Sampling Designs are a family of sampling designs that adresses all theses issues. They are indexed by Hermitian contracting matrices, called kernel, and have known inclusion probabilities for any order, among many others properties. 
+
+__Definition:__  A sampling design &#8473; on a finite set U is a __determinantal sampling design__ if there exists a Hermitian matrix K indexed by U, called kernel, such that for all s &isin;  2<SUP>U</SUP>, &#8721; <SUB>s\' &supe;  s</SUB> &#8473; ( s\' ) = det( K<SUB>\|s</SUB> ). This sampling design is denoted by __DSD(K)__.
+
+This Package
+-------------
+Because they have such good properties but their construction is not so easy, it is important to develop tools to make it available. This package provides two algorithms of constructions of DSD's kernel matrices and a sampling algorithm. All the results used in this package are presented in the scientific paper [_Determinantal Sampling Designs_](https://www.sciencedirect.com/science/article/abs/pii/S0378375818300533) written by Vincent Loonis and Xavier Mary.
+
+
+<br>  </br>
+
+
+Functions
+=============
+loonismary
+-------------
+This function focuses on __fixed size *sampling designs*__ with __prescribed first order inclusion probabilities__ as it is common to work with them in practice.
+
+It has been proven that constructing a determinantal sampling design with prescribed first order inclusion probabilities is equivalent to constructing a projection matrix with a prescribed diagonal. 
+<br>  </br>
+
+_loonismary_ constructs such a matrix with as sole input a vector of N probabilities, which are the first order inclusion probabilities of the sampling design. The exact knowledge of the coefficients K<SUB>kl</SUB> enables a precise characterization of the sampling designs so constructed: the DSD is then totally defined by the kernel matrix in output.
+
+_loonismary_ takes in input any prescribed vector of inclusion probabilities __&Pi;__ of size N such that &#8721; <SUB>k &isin;  U</SUB> &pi;<SUB>k</SUB> is an integer. This integer n will be the number of elements sampled of the DSD.
+
+_loonismary_ offers two types of output, that both provide whole necessary information.
+<ul>
+<li> First type of output is the __kernel matrix K__ described in the definition above.</li>
+<li> Second type of output is also __a matrix, of size N*x*n__, that will be noted __V__. V is an n orthonormal basis of the range of K such that VV&#772;<SUP>T</SUP> = K. It is easily possible to retrieve the kernel matrix with this output.
+*This output is suited to the input needed by the sampling function* lavancier *presented below.*
+</ul>
+<br>  </br>
+In the particular case of equal probability DSDs of size n (&Pi;<SUB>k</SUB> = nN<SUP>-1</SUP> for all k in U) and when n divides N, the matrix K is a block diagonal matrix with n blocks, whose entries are nN<SUP>-1</SUP>. The resulting DSD is thus the 1-per-stratum sampling design. This design is known to be more efficient than systematic sampling of the population in natural order.
+
+In the general case, a possible drawback of this general construction is that some of the joint probabilities equal 0 leading to difficulties in estimating the variance. Also, in the case of equal first order inclusion probability nN<SUP>-1</SUP>, the algorithm always provides the same matrix (whatever the reordering), which properties (of the associated sampling design) may be difficult to interpret unless n divides N, as explained before. The next function, _periodicdsd_ provides an other construction that circumvent these drawbacks, but only in the case of equal first order inclusion probability.
+
+
+```
+> loonismary(c(0.5, 0.75, 0.75, 0.2, 0.4, 0.6, 0.8))
+          [,1]       [,2]      [,3]       [,4]
+[1,] 0.7071068  0.0000000 0.0000000  0.0000000
+[2,] 0.5000000 -0.7071068 0.0000000  0.0000000
+[3,] 0.5000000  0.7071068 0.0000000  0.0000000
+[4,] 0.0000000  0.0000000 0.4472136  0.0000000
+[5,] 0.0000000  0.0000000 0.6324555  0.0000000
+[6,] 0.0000000  0.0000000 0.5163978 -0.5773503
+[7,] 0.0000000  0.0000000 0.3651484  0.8164966
+
+> loonismary(rep(120/4000, 4000))
+```
+
+periodicdsd
+-------------
+This function constructs __fixed size, equal probabilities *sampling designs*__, that exhibit some __periodic behavior__. The kernels involved are special [Toeplitz matrices](https://en.wikipedia.org/wiki/Toeplitz_matrix) constructed upon primitive N<SUP>th</SUP> roots of the unity.
+
+_periodicdsd_ constructs a projection Toeplitz matrix with as inputs:
+<ul>
+<li> an integer __n__, the size of the sampling.</li>
+<li> an integer __r__ that influences the periodicity of the DSD. The bigger r is, the bigger the frequency is. </li>
+<li> an integer __N__, such that n &le; N, r < N and r and N are two relatively prime integers. N is the size of the set U.
+</ul>
+
+As the sampling is of fixed size n, the first order inclusion probabilities are nN<SUP>-1</SUP>.
+
+The exact knowledge of the coefficients K<SUB>kl</SUB> enables a precise characterization of the sampling designs so constructed: the DSD is then totally defined by the kernel matrix in output.
+
+_periodicdsd_ offers two types of output, that both provide whole necessary information.
+<ul>
+<li> First type of output is the __kernel matrix K__ with the properties described above.</li>
+<li> Second type of output is also __a matrix, of size N*x*n__, that will be noted V. V is an n orthonormal basis of the range of K such that VV&#772;<SUP>T</SUP> = K. It is easily possible to retrieve the kernel matrix with this output.
+*This output is suited to the input needed by the sampling function* lavancier *presented below.*
+</ul>
+
+```
+> periodicdsd(4, 1, 7)
+             [,1]                  [,2]                  [,3]                  [,4]
+[1,] 0.3779645+0i  0.2356570+0.2955045i -0.0841050+0.3684881i -0.3405342+0.1639926i
+[2,] 0.3779645+0i -0.0841050+0.3684881i -0.3405342-0.1639926i  0.2356570-0.2955045i
+[3,] 0.3779645+0i -0.3405342+0.1639926i  0.2356570-0.2955045i -0.0841050+0.3684881i
+[4,] 0.3779645+0i -0.3405342-0.1639926i  0.2356570+0.2955045i -0.0841050-0.3684881i
+[5,] 0.3779645+0i -0.0841050-0.3684881i -0.3405342+0.1639926i  0.2356570+0.2955045i
+[6,] 0.3779645+0i  0.2356570-0.2955045i -0.0841050-0.3684881i -0.3405342-0.1639926i
+[7,] 0.3779645+0i  0.3779645-0.0000000i  0.3779645-0.0000000i  0.3779645-0.0000000i
+
+
+> periodicdsd(15, 1, 365)
+> periodicdsd(15, 2, 365)
+```
+
+lavancier
+-------------
+Finally, the package provides a sampling function suited to the outputs of the previous functions. 
+
+*lavancier* samples from fixed size determinantal sampling designs.
+
+This function takes 4 inputs:
+<ul>
+<li> __V__, a matrix,</li>
+<li> __s__, an integer, </li>
+<li> __B__, a boolean, </li>
+<li> __C__, a vector of boolean of size n. </li>
+</ul>
+
+It takes in input a matrix __V__ of an n orthonormal basis of the range of K, the kernel of the DSD. This matrix V is given by the previous two functions for fixed size sampling designs with prescribed first order inclusion probabilities (*loonismary*) or for fixed size, equal probabilities sampling designs (*periodicdsd*).
+
+The function proposes to take one or more samples from the same DSD and returns, depending of the number of samples, 
+<ul>
+<li> a vector with the sample, if only one sample was asked ( __s__ = 1).</li>
+<li> a dataframe with one column for one sample, if several samples were asked ( __s__ >1).</li>
+</ul>
+
+There is also a possibility to plot the evolution of the probability weights at every step of the draw. Therefor, the user has to indicate for each step of the draw if the probability weights have to be plotted or not with a vector of booleans __C__ of size n.
+
+_Example_: For a DSD of size 4 in a set of size 7, C is a vector of 4 booleans. 
+C = (TRUE, FALSE, FALSE, FALSE) will only plot the input probabilities.
+C = (FALSE, FALSE, TRUE, TRUE) will plot the probabilities for the draws of the second and the fourth elements of the sample.
+
+*By default, C is a vector of n boolean = FALSE*.
+
+The last input is a boolean __B__, that specifies the choice of the user about the expression of the output. 
+<ul>
+<li> *__B__ = TRUE* returns __a vector of size N, with only ones and zeros__. The ones indicate the elements sampled.</li>
+<li> *__B__ = FALSE* returns __a vector of size n, containing the elements sampled__.</li>
+</ul>
+
+```
+> V <- loonismary(c(0.5, 0.75, 0.75, 0.2, 0.4, 0.6, 0.8))
+
+> lavancier(V)
+[1] 1 2 6 7
+
+> lavancier(V, B = TRUE)
+[1] 1 0 1 0 1 1 0
+
+> lavancier(V, 5)
+     Sample 1 Sample 2 Sample 3 Sample 4 Sample 5
+[1,]        1        2        1        1        2
+[2,]        3        3        3        2        3
+[3,]        6        5        6        4        5
+[4,]        7        6        7        7        7
+
+> lavancier(V, B = TRUE, C = c(FALSE, TRUE, TRUE, TRUE))
+[1] 1 1 0 0 0 1 1
+```
+![Alt text](C:/Users\PHNB5X\Documents\Mon Travail\determinantalsamplingdesigns\vignettes\tirage2.jpg)
+![Alt text](C:/Users\PHNB5X\Documents\Mon Travail\determinantalsamplingdesigns\vignettes\tirage3.jpg)
+![Alt text](C:/Users\PHNB5X\Documents\Mon Travail\determinantalsamplingdesigns\vignettes\tirage4.jpg)
+```
+> V <- periodicdsd(15, 1, 365)
+
+> lavancier(V, C = c(rep(TRUE, 5), rep(FALSE, 10)))
+[1]   3  26  43  68  89 101 147 163 192 223 258 269 297 323 341
+```
+![Alt text](C:/Users\PHNB5X\Documents\Mon Travail\determinantalsamplingdesigns\vignettes\tiragec1.jpg)
+![Alt text](C:/Users\PHNB5X\Documents\Mon Travail\determinantalsamplingdesigns\vignettes\tiragec2.jpg)
+![Alt text](C:/Users\PHNB5X\Documents\Mon Travail\determinantalsamplingdesigns\vignettes\tiragec3.jpg)
+![Alt text](C:/Users\PHNB5X\Documents\Mon Travail\determinantalsamplingdesigns\vignettes\tiragec4.jpg)
+![Alt text](C:/Users\PHNB5X\Documents\Mon Travail\determinantalsamplingdesigns\vignettes\tiragec5.jpg)
